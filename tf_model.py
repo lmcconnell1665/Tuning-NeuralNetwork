@@ -81,6 +81,8 @@ tune_parameters(batch_size_entry = 10,
                 activation_func_entry = 'relu')
 
 # Parameters that need to be added to tune: number of hidden layers & optimization function
+# Other goals:
+        # Change the function to return an array of the parameters that it was passed, the loss function it returned, and time
 
 #####################
 #### OLD CODE #######
