@@ -46,23 +46,56 @@ print (y_test.shape)
 #### TF FUNCTION ####
 #####################
 
-def tune_parameters(batch_size_entry = 1, hidden_node_entry = 2, activation_func_entry = 'relu'):
+def tune_parameters(batch_size_entry = 1,
+                    hidden_node_entry = 2,
+                    hidden_layers_entry = 2,
+                    activation_func_entry = 'relu',
+                    optimizer_func_entry = 'Adam'):
     
     #Start timer
     start = datetime.datetime.now()
 
     #Specify architecture
     inputs = tf.keras.layers.Input(shape=(X_train.shape[1],), name='input')
-
-    hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
-    hidden2 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden2')(hidden1)
-    output = tf.keras.layers.Dense(units=1, activation="linear", name='output')(hidden2)
+    
+    
+    if hidden_layers_entry == 1:
+        hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
+        output = tf.keras.layers.Dense(units=1, activation="linear", name='output')(hidden1)
+    elif hidden_layers_entry == 2:
+        hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
+        hidden2 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden2')(hidden1)
+        output = tf.keras.layers.Dense(units=1, activation="linear", name='output')(hidden2)
+    elif hidden_layers_entry == 3:
+        hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
+        hidden2 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden2')(hidden1)
+        hidden3 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden3')(hidden2)
+        output = tf.keras.layers.Dense(units=1, activation="linear", name='output')(hidden3)
+    elif hidden_layers_entry == 4:
+        hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
+        hidden2 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden2')(hidden1)
+        hidden3 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden3')(hidden2)
+        hidden4 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden4')(hidden3)
+        output = tf.keras.layers.Dense(units=1, activation="linear", name='output')(hidden4)
+    elif hidden_layers_entry == 5:
+        hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
+        hidden2 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden2')(hidden1)
+        hidden3 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden3')(hidden2)
+        hidden4 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden4')(hidden3)
+        hidden5 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden5')(hidden4)
+        output = tf.keras.layers.Dense(units=1, activation="linear", name='output')(hidden5)
 
     #Create model 
     model = tf.keras.Model(inputs = inputs, outputs = output)
 
     #Compile model
-    model.compile(loss = 'mse', optimizer = tf.keras.optimizers.SGD(lr = 0.001))
+    if optimizer_func_entry == "SGD":
+        model.compile(loss = 'mse', optimizer = tf.keras.optimizers.SGD(lr = 0.001))
+    elif optimizer_func_entry == "Adam":
+        model.compile(loss = 'mse', optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001,
+                                                                         beta_1 = 0.9,
+                                                                         beta_2 = 0.999,
+                                                                         epsilon = 1e-07))
 
     #Fit model
     model.fit(x=X_train,y=y_train, batch_size=batch_size_entry, epochs=10)
@@ -83,7 +116,9 @@ def tune_parameters(batch_size_entry = 1, hidden_node_entry = 2, activation_func
     results = {'time': str(time),
                'batch_size': batch_size_entry,
                'hidden_node_count': hidden_node_entry,
+               'hidden_layers_count': hidden_layers_entry,
                'activation_function': activation_func_entry,
+               'optimizer': optimizer_func_entry,
                'loss': loss}
 
     return results
@@ -94,9 +129,11 @@ def tune_parameters(batch_size_entry = 1, hidden_node_entry = 2, activation_func
 
 tune_grid_results = list()
 
-try_batch_size = list(range(0,5))
-try_hidden_node = list(range(0,5))
+try_batch_size = list(range(1,2))
+try_hidden_node = list(range(1,2))
+try_hidden_layers = list(range(1,3)) #can only handle 1 through 5
 try_activation_func = ['relu', 'sigmoid']
+try_optimizer_func = ['SGD', 'Adam']
 
 for i in range(len(try_batch_size)):
     try_this_batch_size = try_batch_size[i]
@@ -106,13 +143,20 @@ for i in range(len(try_batch_size)):
         
         for k in range(len(try_activation_func)):
             try_this_activation_func = try_activation_func[k]
+            
+            for l in range(len(try_optimizer_func)):
+                try_this_optimizer_func = try_optimizer_func[l]
+                
+                for m in range(len(try_hidden_layers)):
+                    try_this_hidden_layer = try_hidden_layers[m]
     
-            tune_grid_results.append( tune_parameters(batch_size_entry = try_this_batch_size,
-                            hidden_node_entry = try_this_hidden_node,
-                            activation_func_entry = try_this_activation_func))
+                    tune_grid_results.append(tune_parameters(batch_size_entry = try_this_batch_size,
+                                    hidden_node_entry = try_this_hidden_node,
+                                    hidden_layers_entry = try_this_hidden_layer,
+                                    activation_func_entry = try_this_activation_func,
+                                    optimizer_func_entry = try_this_optimizer_func))
 
-
-# Parameters that need to be added to tune: number of hidden layers & optimization function
+# Parameters that need to be added to tune: number of hidden layers
 
 #####################
 #### OLD CODE #######
@@ -125,3 +169,4 @@ for i in range(len(try_batch_size)):
 # model.layers
 # hidden1weights = model.layers[1]
 # hidden1weights.get_weights()
+    
