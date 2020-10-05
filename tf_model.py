@@ -6,6 +6,7 @@ Dunn, McGinnis, McConnell
 
 import tensorflow as tf
 import pandas as pd
+import datetime
 from sklearn import datasets, linear_model
 from sklearn.model_selection import train_test_split
 
@@ -46,6 +47,9 @@ print (y_test.shape)
 #####################
 
 def tune_parameters(batch_size_entry = 1, hidden_node_entry = 2, activation_func_entry = 'relu'):
+    
+    #Start timer
+    start = datetime.datetime.now()
 
     #Specify architecture
     inputs = tf.keras.layers.Input(shape=(X_train.shape[1],), name='input')
@@ -68,21 +72,47 @@ def tune_parameters(batch_size_entry = 1, hidden_node_entry = 2, activation_func
 
     #making a prediction (all records)
     yhat = model.predict(x=X_test)
-
+    
+    #Stop timer
+    time = datetime.datetime.now() - start
+    
     #getting the loss (on for example a test set)
-    return model.evaluate(X_test,y_test)
+    loss = model.evaluate(X_test,y_test)
+    
+    #Gather results
+    results = {'time': str(time),
+               'batch_size': batch_size_entry,
+               'hidden_node_count': hidden_node_entry,
+               'activation_function': activation_func_entry,
+               'loss': loss}
+
+    return results
 
 #####################
 ###### TUNING #######
 #####################
 
-tune_parameters(batch_size_entry = 10,
-                hidden_node_entry = 1,
-                activation_func_entry = 'relu')
+tune_grid_results = list()
+
+try_batch_size = list(range(0,5))
+try_hidden_node = list(range(0,5))
+try_activation_func = ['relu', 'sigmoid']
+
+for i in range(len(try_batch_size)):
+    try_this_batch_size = try_batch_size[i]
+    
+    for j in range(len(try_hidden_node)):
+        try_this_hidden_node = try_hidden_node[j]
+        
+        for k in range(len(try_activation_func)):
+            try_this_activation_func = try_activation_func[k]
+    
+            tune_grid_results.append( tune_parameters(batch_size_entry = try_this_batch_size,
+                            hidden_node_entry = try_this_hidden_node,
+                            activation_func_entry = try_this_activation_func))
+
 
 # Parameters that need to be added to tune: number of hidden layers & optimization function
-# Other goals:
-        # Change the function to return an array of the parameters that it was passed, the loss function it returned, and time
 
 #####################
 #### OLD CODE #######
