@@ -9,6 +9,8 @@ import pandas as pd
 import datetime
 from sklearn import datasets, linear_model
 from sklearn.model_selection import train_test_split
+from random import sample
+import numpy as np
 
 tf.__version__
 
@@ -18,7 +20,7 @@ tf.__version__
 
 # Import data
 pricing = pd.read_csv('pricing.csv', sep = ';')
-pricing = pricing[0:100]
+pricing = pricing.sample(1000)
 
 # Pull on y variable
 y = pricing['gross_margin'] / pricing['adjusted_duration_seconds_sum']
@@ -42,6 +44,23 @@ print (y_train.shape)
 print (X_test.shape)
 print (y_test.shape)
 
+################################
+#### SPARSING - COMING SOON ####
+################################
+
+# Sparse encoding categorical variables
+# def sparse_tensor(X_cat_int):
+#     X_cat_sparse = []
+#     for i in range(len(X_cat_int)):
+#         indices = [0,X_cat_int[i]]
+#         X_cat_sparse.append(tf.sparse.SparseTensor(indices = [indices], 
+#                                                     values = [1], 
+#                                                     dense_shape = [1,len(np.unique(X_cat_int))]))
+#     return X_cat_sparse
+
+# X_host_full_name_1_array_sparse_train = np.array(sparse_tensor(X_train['host_full_name_1_array'].values))
+# X_host_full_name_1_array_sparse_test = np.array(sparse_tensor(X_test['host_full_name_1_array'].values))
+
 #####################
 #### TF FUNCTION ####
 #####################
@@ -50,14 +69,14 @@ def tune_parameters(batch_size_entry = 1,
                     hidden_node_entry = 2,
                     hidden_layers_entry = 2,
                     activation_func_entry = 'relu',
-                    optimizer_func_entry = 'Adam'):
+                    optimizer_func_entry = 'Adam',
+                    epoch_entry = 10):
     
     #Start timer
     start = datetime.datetime.now()
 
     #Specify architecture
     inputs = tf.keras.layers.Input(shape=(X_train.shape[1],), name='input')
-    
     
     if hidden_layers_entry == 1:
         hidden1 = tf.keras.layers.Dense(units=hidden_node_entry, activation=activation_func_entry, name='hidden1')(inputs)
@@ -98,7 +117,7 @@ def tune_parameters(batch_size_entry = 1,
                                                                          epsilon = 1e-07))
 
     #Fit model
-    model.fit(x=X_train,y=y_train, batch_size=batch_size_entry, epochs=10)
+    model.fit(x=X_train,y=y_train, batch_size=batch_size_entry, epochs=epoch_entry)
 
     #making a prediction (first record)
     yhat = model.predict(x=X_test[0:1])
@@ -119,6 +138,7 @@ def tune_parameters(batch_size_entry = 1,
                'hidden_layers_count': hidden_layers_entry,
                'activation_function': activation_func_entry,
                'optimizer': optimizer_func_entry,
+               'epoch_count': epoch_entry,
                'loss': loss}
 
     return results
@@ -129,11 +149,12 @@ def tune_parameters(batch_size_entry = 1,
 
 tune_grid_results = list()
 
-try_batch_size = list(range(1,2))
-try_hidden_node = list(range(1,2))
-try_hidden_layers = list(range(1,3)) #can only handle 1 through 5
+try_batch_size = list([1, 10, 50, 100, 1000])
+try_hidden_node = list([2, 5])
+try_hidden_layers = list([1, 3, 5]) #can only handle 1 through 5
 try_activation_func = ['relu', 'sigmoid']
 try_optimizer_func = ['SGD', 'Adam']
+try_epoch_size = list([10, 20, 30])
 
 for i in range(len(try_batch_size)):
     try_this_batch_size = try_batch_size[i]
@@ -149,14 +170,23 @@ for i in range(len(try_batch_size)):
                 
                 for m in range(len(try_hidden_layers)):
                     try_this_hidden_layer = try_hidden_layers[m]
+                    
+                    for n in range(len(try_epoch_size)):
+                        try_this_epoch_size = try_epoch_size[n]
     
-                    tune_grid_results.append(tune_parameters(batch_size_entry = try_this_batch_size,
-                                    hidden_node_entry = try_this_hidden_node,
-                                    hidden_layers_entry = try_this_hidden_layer,
-                                    activation_func_entry = try_this_activation_func,
-                                    optimizer_func_entry = try_this_optimizer_func))
+                        tune_grid_results.append(tune_parameters(batch_size_entry = try_this_batch_size,
+                                        hidden_node_entry = try_this_hidden_node,
+                                        hidden_layers_entry = try_this_hidden_layer,
+                                        activation_func_entry = try_this_activation_func,
+                                        optimizer_func_entry = try_this_optimizer_func,
+                                        epoch_entry = try_this_epoch_size))
 
-# Parameters that need to be added to tune: number of hidden layers
+#number of iterations completed
+len(tune_grid_results)
+
+#find the lowest loss
+seq = [x['loss'] for x in tune_grid_results]
+next(item for item in tune_grid_results if item["loss"] == min(seq))
 
 #####################
 #### OLD CODE #######
