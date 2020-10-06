@@ -10,9 +10,10 @@ import datetime
 from sklearn import datasets, linear_model
 from sklearn.model_selection import train_test_split
 from random import sample
-import numpy as np
+import numpy as np  
+import json
 
-tf.__version__
+# tf.__version__
 
 #####################
 #### DATA IMPORT ####
@@ -20,7 +21,7 @@ tf.__version__
 
 # Import data
 pricing = pd.read_csv('pricing.csv', sep = ';')
-pricing = pricing.sample(1000)
+pricing = pricing.sample(1000000)
 
 # Pull on y variable
 y = pricing['gross_margin'] / pricing['adjusted_duration_seconds_sum']
@@ -181,16 +182,23 @@ for i in range(len(try_batch_size)):
                                         optimizer_func_entry = try_this_optimizer_func,
                                         epoch_entry = try_this_epoch_size))
 
-#number of iterations completed
-len(tune_grid_results)
+#########################
+#### SAVE RESULTS #######
+#########################       
 
-#find the lowest loss
-seq = [x['loss'] for x in tune_grid_results]
-next(item for item in tune_grid_results if item["loss"] == min(seq))
+with open('outputfile', 'w') as fout:
+    json.dump(tune_grid_results, fout)
 
 #####################
 #### OLD CODE #######
 #####################
+
+#number of iterations completed
+# len(tune_grid_results)
+
+#find the lowest loss
+# seq = [x['loss'] for x in tune_grid_results]
+# next(item for item in tune_grid_results if item["loss"] == min(seq))
 
 #summarizing the model
 # model.summary()
