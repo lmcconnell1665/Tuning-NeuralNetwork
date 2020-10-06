@@ -21,7 +21,7 @@ import json
 
 # Import data
 pricing = pd.read_csv('pricing.csv', sep = ';')
-pricing = pricing.sample(1000000)
+pricing = pricing.sample(10000)
 
 # Pull on y variable
 y = pricing['gross_margin'] / pricing['adjusted_duration_seconds_sum']
@@ -208,3 +208,12 @@ with open('outputfile', 'w') as fout:
 # hidden1weights = model.layers[1]
 # hidden1weights.get_weights()
     
+# Write results to json file each iteration
+# file1 = open("results.txt", "a")  # append mode 
+#                         file1.write(json.dumps(tune_parameters(batch_size_entry = try_this_batch_size,
+#                                         hidden_node_entry = try_this_hidden_node,
+#                                         hidden_layers_entry = try_this_hidden_layer,
+#                                         activation_func_entry = try_this_activation_func,
+#                                         optimizer_func_entry = try_this_optimizer_func,
+#                                         epoch_entry = try_this_epoch_size))) 
+#                         file1.close()
